@@ -1,0 +1,48 @@
+{
+  "id": "74fdbd0e-bfc3-455c-bf92-281cdcec4a0f",
+  "status": "ERRORED",
+  "platform": "ANDROID",
+  "error": {
+    "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+    "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+  },
+  "artifacts": {},
+  "fingerprint": {
+    "id": "019fa297-325c-734c-8151-ba461be1c44c",
+    "hash": "9bfeb915493592d6e63fb9e814da25a0820e2102"
+  },
+  "initiatingActor": {
+    "id": "902ae262-7931-42c9-bb0d-218a96c1c6e6",
+    "displayName": "theyasinoz"
+  },
+  "logFiles": [
+    "https://storage.googleapis.com/eas-workflows-production/logs/63a8d19e-d9f8-4c66-9988-580dfa0c510e/74fdbd0e-bfc3-455c-bf92-281cdcec4a0f/2026-07-27T08%3A00%3A49Z-f31a14c4-23cb-47aa-a8e1-54ff09e9c40a.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260727%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260727T082315Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=597061df50cb2c7ecdd0590044a0e26ae50c7efb28dab8cf93ec533e711664bd5fce5cb401f58802ba85b55092550e72273192c56e5f4c8b5f92093972c6b705ebaf71afad8c17cd15d50f10e5201bbda9bda1c5bae6846e07b1de1c60561a644eac28d00f088714331814bd89999895372a6bd2edb34650b9d82a7a6f3493906c6f19708eec312c904d66db6da53a66c9faa3b1b8e82aeb1c3406bcadb32e96ca71b0692c4cd98b16f8f6df6dce3bc541c130fffb930215602a99e2540010b46f2bcc140c53aa1d990057598b21dd72fe06b4b5387b3035446630a1a90d2995feff9adc6ed00a71626ea90a6757475708163ce3fdda9d1973c7285837064a70"
+  ],
+  "project": {
+    "id": "63a8d19e-d9f8-4c66-9988-580dfa0c510e",
+    "name": "atolye-toolbox",
+    "slug": "atolye-toolbox",
+    "ownerAccount": {
+      "id": "d70d4bc1-05f9-4d25-82c4-e52aab409d42",
+      "name": "theyasinoz"
+    }
+  },
+  "distribution": "INTERNAL",
+  "buildProfile": "preview",
+  "sdkVersion": "54.0.0",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "1",
+  "gitCommitHash": "cfff8d8e8757ff086b42073b8d705bdd151da763",
+  "gitCommitMessage": "fix crash: add env vars to EAS, fix useFrameworkReady for native, add error boundary",
+  "priority": "NORMAL",
+  "createdAt": "2026-07-27T08:00:45.582Z",
+  "updatedAt": "2026-07-27T08:04:51.812Z",
+  "completedAt": "2026-07-27T08:04:51.644Z",
+  "expirationDate": "2026-08-10T08:00:45.638Z",
+  "isForIosSimulator": false,
+  "metrics": {
+    "buildWaitTime": 3526,
+    "buildQueueTime": 5127,
+    "buildDuration": 237409
+  }
+}
