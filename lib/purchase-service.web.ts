@@ -1,4 +1,5 @@
 import { Platform, Alert } from 'react-native';
+import { asyncStorage } from './platform-storage';
 
 export type PlanType = 'lifetime' | 'monthly';
 
@@ -11,17 +12,17 @@ export interface PurchaseResult {
 
 const STORAGE_KEY = 'atolye_pro_status';
 
-function getStoredStatus(): { isPro: boolean; planId: string | null } {
+async function getStoredStatus(): Promise<{ isPro: boolean; planId: string | null }> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = await asyncStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
   return { isPro: false, planId: null };
 }
 
-function setStoredStatus(isPro: boolean, planId: string | null) {
+async function setStoredStatus(isPro: boolean, planId: string | null) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ isPro, planId }));
+    await asyncStorage.setItem(STORAGE_KEY, JSON.stringify({ isPro, planId }));
   } catch {}
 }
 
@@ -41,8 +42,8 @@ export async function buyPackage(planType: PlanType): Promise<PurchaseResult> {
         { text: 'İptal', onPress: () => resolve({ success: false, isPro: false, planId: null, error: 'İptal edildi' }) },
         {
           text: 'Evet, Test Et',
-          onPress: () => {
-            setStoredStatus(true, planId);
+          onPress: async () => {
+            await setStoredStatus(true, planId);
             resolve({ success: true, isPro: true, planId });
           },
         },
@@ -52,7 +53,7 @@ export async function buyPackage(planType: PlanType): Promise<PurchaseResult> {
 }
 
 export async function restorePurchases(): Promise<PurchaseResult> {
-  const status = getStoredStatus();
+  const status = await getStoredStatus();
   if (status.isPro) {
     return { success: true, isPro: true, planId: status.planId };
   }

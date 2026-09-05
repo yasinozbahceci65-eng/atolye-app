@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { asyncStorage } from './platform-storage';
 
 export type PlanType = 'lifetime' | 'monthly';
 
@@ -15,7 +16,6 @@ const IOS_API_KEY = 'appl_api_key_buraya';
 
 let initialized = false;
 
-// RevenueCat dinamik import (native-only)
 let Purchases: any = null;
 let isRevenueCatAvailable = false;
 
@@ -31,21 +31,21 @@ async function loadRevenueCat(): Promise<void> {
       isRevenueCatAvailable = true;
     }
   } catch {
-    // react-native-purchases yüklü değil — localStorage fallback
+    // react-native-purchases yüklü değil — asyncStorage fallback
   }
 }
 
-function getStoredStatus(): { isPro: boolean; planId: string | null } {
+async function getStoredStatus(): Promise<{ isPro: boolean; planId: string | null }> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = await asyncStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
   return { isPro: false, planId: null };
 }
 
-function setStoredStatus(isPro: boolean, planId: string | null) {
+async function setStoredStatus(isPro: boolean, planId: string | null) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ isPro, planId }));
+    await asyncStorage.setItem(STORAGE_KEY, JSON.stringify({ isPro, planId }));
   } catch {}
 }
 
@@ -57,8 +57,7 @@ export async function buyPackage(planType: PlanType): Promise<PurchaseResult> {
   const planId = planType === 'lifetime' ? 'atolyem_lifetime' : 'atolyem_monthly';
 
   if (!isRevenueCatAvailable || !Purchases) {
-    // RevenueCat yapılandırılmamış — localStorage fallback
-    setStoredStatus(true, planId);
+    await setStoredStatus(true, planId);
     return { success: true, isPro: true, planId };
   }
 
@@ -66,7 +65,7 @@ export async function buyPackage(planType: PlanType): Promise<PurchaseResult> {
     const offerings = await Purchases.getOfferings();
     const offering = offerings.current;
     if (!offering) {
-      setStoredStatus(true, planId);
+      await setStoredStatus(true, planId);
       return { success: true, isPro: true, planId };
     }
 
@@ -80,7 +79,7 @@ export async function buyPackage(planType: PlanType): Promise<PurchaseResult> {
 
     const { customerInfo } = await Purchases.purchasePackage(pkg);
     const hasPro = customerInfo?.entitlements?.active?.['pro'] != null;
-    setStoredStatus(hasPro, hasPro ? planId : null);
+    await setStoredStatus(hasPro, hasPro ? planId : null);
     return { success: hasPro, isPro: hasPro, planId: hasPro ? planId : null };
   } catch (e: any) {
     if (e?.userCancelled) {
@@ -92,7 +91,7 @@ export async function buyPackage(planType: PlanType): Promise<PurchaseResult> {
 
 export async function restorePurchases(): Promise<PurchaseResult> {
   if (!isRevenueCatAvailable || !Purchases) {
-    const status = getStoredStatus();
+    const status = await getStoredStatus();
     if (status.isPro) {
       return { success: true, isPro: true, planId: status.planId };
     }
@@ -102,8 +101,8 @@ export async function restorePurchases(): Promise<PurchaseResult> {
   try {
     const customerInfo = await Purchases.restorePurchases();
     const hasPro = customerInfo?.entitlements?.active?.['pro'] != null;
-    const stored = getStoredStatus();
-    setStoredStatus(hasPro, hasPro ? stored.planId : null);
+    const stored = await getStoredStatus();
+    await setStoredStatus(hasPro, hasPro ? stored.planId : null);
     return { success: hasPro, isPro: hasPro, planId: hasPro ? stored.planId : null };
   } catch (e: any) {
     return { success: false, isPro: false, planId: null, error: e?.message ?? 'Geri yükleme hatası' };
@@ -116,8 +115,8 @@ export async function checkProStatus(): Promise<{ isPro: boolean; planId: string
       const customerInfo = await Purchases.getCustomerInfo();
       const hasPro = customerInfo?.entitlements?.active?.['pro'] != null;
       if (hasPro) {
-        const stored = getStoredStatus();
-        setStoredStatus(true, stored.planId);
+        const stored = await getStoredStatus();
+        await setStoredStatus(true, stored.planId);
         return { isPro: true, planId: stored.planId };
       }
     } catch {}
