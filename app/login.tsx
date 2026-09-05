@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { Wrench, ShieldCheck } from 'lucide-react-native';
 import { Colors } from '@/lib/colors';
@@ -44,7 +45,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.headerGlow} />
 
       <View style={styles.content}>
@@ -85,7 +86,7 @@ export default function LoginScreen() {
           Giriş yaparak Kullanım Koşulları ve Gizlilik Politikasını kabul etmiş olursunuz.
         </Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1, justifyContent: 'center', alignItems: 'stretch',
-    paddingHorizontal: 28, paddingTop: Platform.OS === 'web' ? 0 : 24, paddingBottom: 28,
+    paddingHorizontal: 28, paddingTop: Platform.OS === 'web' ? 0 : 16, paddingBottom: 16,
   },
   brandBlock: { alignItems: 'center', marginBottom: 52 },
   logoCircle: {
@@ -120,6 +121,6 @@ const styles = StyleSheet.create({
   securityText: { fontFamily: 'Inter-Regular', fontSize: 12, color: Colors.neutral500 },
   termsText: {
     maxWidth: 360, alignSelf: 'center', fontFamily: 'Inter-Regular', fontSize: 11,
-    color: Colors.neutral400, lineHeight: 17, textAlign: 'center', marginTop: 'auto', paddingTop: 44,
+    color: Colors.neutral400, lineHeight: 17, textAlign: 'center', marginTop: 'auto', paddingTop: 44, marginBottom: 24,
   },
 });

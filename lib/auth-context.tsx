@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
+import { makeRedirectUri } from 'expo-auth-session';
 import { supabase } from '@/lib/supabase';
 import type { Session, User } from '@supabase/supabase-js';
 
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = useCallback(async () => {
     const redirectTo = Platform.OS === 'web'
       ? `${window.location.origin}/login`
-      : Linking.createURL('auth-callback');
+      : makeRedirectUri({ path: 'auth-callback' });
 
     if (Platform.OS === 'web') {
       const { error } = await supabase.auth.signInWithOAuth({
