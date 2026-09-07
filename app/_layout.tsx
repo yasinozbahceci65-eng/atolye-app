@@ -5,6 +5,7 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ProProvider } from '@/lib/pro-context';
 import { ProfileProvider } from '@/lib/profile-context';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
+import { GuestGuardProvider } from '@/lib/guest-guard';
 import { initAds } from '@/lib/ads';
 import { offlineSync } from '@/lib/offline-sync';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
@@ -41,19 +42,19 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 }
 
 function AuthGate() {
-  const { session, loading } = useAuth();
+  const { session, loading, isGuest } = useAuth();
   const router = useRouter();
   const navState = useRootNavigationState();
 
   useEffect(() => {
     if (!navState?.key) return;
     if (loading) return;
-    if (!session) {
+    if (!session && !isGuest) {
       router.replace('/login');
     } else {
       router.replace('/(tabs)/');
     }
-  }, [session, loading, navState?.key, router]);
+  }, [session, loading, isGuest, navState?.key, router]);
 
   if (loading) {
     return (
@@ -91,9 +92,10 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <ProProvider>
-          <ProfileProvider>
-            <AuthGate />
+        <GuestGuardProvider>
+          <ProProvider>
+            <ProfileProvider>
+              <AuthGate />
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="login" />
@@ -107,8 +109,9 @@ export default function RootLayout() {
               <Stack.Screen name="+not-found" />
             </Stack>
             <StatusBar style="light" />
-          </ProfileProvider>
-        </ProProvider>
+            </ProfileProvider>
+          </ProProvider>
+        </GuestGuardProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

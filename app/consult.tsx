@@ -1,10 +1,12 @@
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, ScrollView, Alert, ActivityIndicator, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useCallback } from 'react';
 import { ArrowLeft, Camera, Image as ImageIcon, Send, MessageCircle, X, Crown } from 'lucide-react-native';
 import { Colors } from '@/lib/colors';
 import { usePro } from '@/lib/pro-context';
 import * as ImagePicker from 'expo-image-picker';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 
 const WHATSAPP_NUMBER = '905537743488';
 
@@ -52,25 +54,29 @@ export default function ConsultScreen() {
     if (!photo) { Alert.alert('Uyarı', 'Lütfen fotoğraf yükleyin'); return; }
     setSending(true);
 
-    const prefix = isUsta ? '🛠️ Ustaya Danışma' : '📐 Mimara Danışma';
-    const message = `${prefix}\n\n${description}\n\n(Fotoğraf eklenmiştir)`;
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    const prefix = isUsta ? 'Ustaya Danışma' : 'Mimara Danışma';
+    const message = `${prefix}\n\n${description}`;
 
     try {
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert('Hata', 'Paylaşım bu cihazda kullanılamıyor.');
         setSending(false);
-        Alert.alert('Gönderildi', 'WhatsApp açıldı. Fotoğrafı WhatsApp üzerinden göndermeyi unutmayın.', [
-          { text: 'Tamam', onPress: () => router.back() }
-        ]);
-      } else {
-        setSending(false);
-        Alert.alert('Hata', 'WhatsApp açılamadı. WhatsApp yüklü olduğundan emin olun.');
+        return;
       }
-    } catch (e) {
+
+      await Sharing.shareAsync(photo, {
+        mimeType: 'image/jpeg',
+        dialogTitle: message,
+      });
+
       setSending(false);
-      Alert.alert('Hata', 'WhatsApp açılamadı.');
+      Alert.alert('Bilgi', 'Fotoğraf paylaşım ekranı açıldı. WhatsApp seçerek fotoğrafı ve açıklamayı gönderin.', [
+        { text: 'Tamam', onPress: () => router.back() }
+      ]);
+    } catch (e: any) {
+      setSending(false);
+      Alert.alert('Hata', 'Paylaşım açılamadı: ' + (e?.message ?? 'Bilinmeyen hata'));
     }
   };
 
@@ -120,8 +126,8 @@ export default function ConsultScreen() {
             <Text style={styles.infoTitle}>{isUsta ? 'Usta ile İletişim' : 'Mimar ile İletişim'}</Text>
             <Text style={styles.infoDesc}>
               {isUsta
-                ? 'Sorunlu bölgenin fotoğrafını yükleyin, altına açıklama yazın. Gönder butonuna bastığınızda WhatsApp üzerinden ustaya yönlendirilirsiniz.'
-                : 'Proje veya tasarım sorularınızı fotoğraf ekleyerek mimara iletin. WhatsApp üzerinden iletişime geçilir.'}
+                ? 'Sorunlu bölgenin fotoğrafını yükleyin, altına açıklama yazın. Gönder butonuna bastığınızda paylaşım ekranı açılır, WhatsApp seçerek fotoğrafı gönderin.'
+                : 'Proje veya tasarım sorularınızı fotoğraf ekleyerek mimara iletin. Paylaşım ekranından WhatsApp ile gönderilir.'}
             </Text>
           </View>
         </View>
@@ -166,7 +172,7 @@ export default function ConsultScreen() {
         </TouchableOpacity>
 
         <Text style={styles.note}>
-          Not: Gönder butonu WhatsApp'ı açacaktır. Fotoğrafı WhatsApp üzerinden manuel olarak ekleyip gönderebilirsiniz.
+          Not: Gönder butonu cihazınızın paylaşım ekranını açar. WhatsApp seçerek fotoğrafı doğrudan gönderebilirsiniz.
         </Text>
       </ScrollView>
     </View>

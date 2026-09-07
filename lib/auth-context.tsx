@@ -18,7 +18,9 @@ interface AuthState {
   user: User | null;
   profile: AuthProfile | null;
   loading: boolean;
+  isGuest: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInAsGuest: () => void;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -28,7 +30,9 @@ const AuthContext = createContext<AuthState>({
   user: null,
   profile: null,
   loading: true,
+  isGuest: false,
   signInWithGoogle: async () => {},
+  signInAsGuest: () => {},
   signOut: async () => {},
   refreshProfile: async () => {},
 });
@@ -38,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   const loadProfile = useCallback(async (currentUser: User | null) => {
     if (!currentUser) {
@@ -89,9 +94,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession()
       .then(({ data }) => {
         if (!mounted) return;
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
-        loadProfile(data.session?.user ?? null);
+        if (data.session) {
+          setSession(data.session);
+          setUser(data.session?.user ?? null);
+          loadProfile(data.session?.user ?? null);
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -102,9 +109,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       (async () => {
         if (!mounted) return;
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        await loadProfile(newSession?.user ?? null);
+        if (newSession) {
+          setIsGuest(false);
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+          await loadProfile(newSession?.user ?? null);
+        } else if (!isGuest) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+        }
         setLoading(false);
       })();
     });
@@ -120,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTimeout(timeout);
       listener.subscription.unsubscribe();
     };
-  }, [loadProfile]);
+  }, [loadProfile, isGuest]);
 
   const refreshProfile = useCallback(async () => {
     await loadProfile(user);
@@ -169,17 +183,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const signInAsGuest = useCallback(() => {
+    setIsGuest(true);
+    setLoading(false);
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
     setProfile(null);
+    setIsGuest(false);
   }, []);
 
   return (
     <AuthContext.Provider value={{
-      session, user, profile, loading,
-      signInWithGoogle, signOut, refreshProfile,
+      session, user, profile, loading, isGuest,
+      signInWithGoogle, signInAsGuest, signOut, refreshProfile,
     }}>
       {children}
     </AuthContext.Provider>

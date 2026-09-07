@@ -1,14 +1,14 @@
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
-import { Wrench, ShieldCheck } from 'lucide-react-native';
+import { Wrench, ShieldCheck, Eye } from 'lucide-react-native';
 import { Colors } from '@/lib/colors';
 import { useAuth } from '@/lib/auth-context';
 import { GoogleLogo } from '@/components/GoogleLogo';
 import { supabase } from '@/lib/supabase';
 
 export default function LoginScreen() {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signInAsGuest } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,6 +76,15 @@ export default function LoginScreen() {
 
           {error && <Text style={styles.errorText}>{error}</Text>}
 
+          <TouchableOpacity
+            style={styles.guestButton}
+            onPress={signInAsGuest}
+            activeOpacity={0.7}
+          >
+            <Eye color={Colors.neutral500} size={18} />
+            <Text style={styles.guestButtonText}>Giriş Yapmadan İlerle</Text>
+          </TouchableOpacity>
+
           <View style={styles.securityNote}>
             <ShieldCheck color={Colors.primary} size={17} />
             <Text style={styles.securityText}>Güvenli giriş ile verileriniz korunur.</Text>
@@ -119,6 +128,11 @@ const styles = StyleSheet.create({
   errorText: { fontFamily: 'Inter-Regular', fontSize: 13, color: Colors.danger, textAlign: 'center', lineHeight: 19, marginTop: 14 },
   securityNote: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 22 },
   securityText: { fontFamily: 'Inter-Regular', fontSize: 12, color: Colors.neutral500 },
+  guestButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 14, marginTop: 12,
+  },
+  guestButtonText: { fontFamily: 'Inter-Medium', fontSize: 14, color: Colors.neutral500 },
   termsText: {
     maxWidth: 360, alignSelf: 'center', fontFamily: 'Inter-Regular', fontSize: 11,
     color: Colors.neutral400, lineHeight: 17, textAlign: 'center', marginTop: 'auto', paddingTop: 44, marginBottom: 24,

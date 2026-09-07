@@ -4,24 +4,37 @@ import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, ScanLine, Save, Camera } from 'lucide-react-native';
 import { Colors } from '@/lib/colors';
 import { supabase, Category, UnitType } from '@/lib/supabase';
+import { useGuestGuard } from '@/lib/guest-guard';
 
 const UNITS: UnitType[] = ['Litre', 'Adet', 'Metre', 'Kg', 'Kutu', 'm²'];
 
+const TRADE_CATEGORIES = [
+  { name: 'Boya', color: '#3B82F6' },
+  { name: 'Seramik', color: '#F59E0B' },
+  { name: 'Alçıpan', color: '#10B981' },
+  { name: 'Laminat Parke', color: '#EF4444' },
+  { name: 'Tesisat', color: '#06B6D4' },
+  { name: 'Marangoz', color: '#8B5CF6' },
+];
+
 export default function AddItemScreen() {
   const router = useRouter();
+  const { requireAuth } = useGuestGuard();
   const { barcode } = useLocalSearchParams<{ barcode?: string }>();
   const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('0');
-  const [maxQuantity, setMaxQuantity] = useState('100');
   const [unitType, setUnitType] = useState<UnitType>('Adet');
   const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [criticalLevel, setCriticalLevel] = useState('10');
   const [barcodeValue, setBarcodeValue] = useState(barcode || '');
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
+    if (!requireAuth()) {
+      router.back();
+      return;
+    }
     supabase.from('categories').select('*').order('name').then(({ data }) => setCategories(data ?? []));
   }, []);
 
@@ -31,10 +44,10 @@ export default function AddItemScreen() {
     const { error } = await supabase.from('items').insert({
       name: name.trim(),
       quantity: parseFloat(quantity) || 0,
-      max_quantity: parseFloat(maxQuantity) || 100,
+      max_quantity: 100,
       unit_type: unitType,
       category_id: categoryId,
-      critical_level: parseFloat(criticalLevel) || 10,
+      critical_level: 10,
       barcode_value: barcodeValue || null,
       notes: notes || null,
     });
@@ -83,19 +96,8 @@ export default function AddItemScreen() {
           ))}
         </ScrollView>
 
-        <View style={styles.twoCol}>
-          <View style={styles.col}>
-            <Text style={styles.label}>Mevcut Miktar</Text>
-            <TextInput style={styles.input} value={quantity} onChangeText={setQuantity} keyboardType="numeric" />
-          </View>
-          <View style={styles.col}>
-            <Text style={styles.label}>Maksimum Miktar</Text>
-            <TextInput style={styles.input} value={maxQuantity} onChangeText={setMaxQuantity} keyboardType="numeric" />
-          </View>
-        </View>
-
-        <Text style={styles.label}>Kritik Seviye</Text>
-        <TextInput style={styles.input} value={criticalLevel} onChangeText={setCriticalLevel} keyboardType="numeric" />
+        <Text style={styles.label}>Mevcut Miktar</Text>
+        <TextInput style={styles.input} value={quantity} onChangeText={setQuantity} keyboardType="numeric" />
 
         <Text style={styles.label}>Barkod / QR Kod</Text>
         <View style={styles.barcodeRow}>
@@ -146,8 +148,6 @@ const styles = StyleSheet.create({
   chipDot: { width: 8, height: 8, borderRadius: 4 },
   chipText: { fontFamily: 'Inter-Medium', fontSize: 13, color: Colors.neutral600 },
   chipTextActive: { color: Colors.white },
-  twoCol: { flexDirection: 'row', gap: 12 },
-  col: { flex: 1 },
   barcodeRow: { flexDirection: 'row', gap: 10 },
   scanBtn: {
     width: 48, backgroundColor: Colors.primary, borderRadius: 12,
